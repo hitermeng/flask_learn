@@ -38,8 +38,15 @@ class User(db.Model):
 	id=db.Column(db.Integer,primary_key=True,autoincrement=True)
 	username=db.Column(db.String(100),nullable=False)
 	age=db.Column(db.Integer,nullable=False)
-
-# user=User(USERNAME="zhangsan",age=18)
+	
+class Article(db.Model):
+	__tablename__="article"
+	id=db.Column(db.Integer,primary_key=True,autoincrement=True)
+	title=db.Column(db.String(100),nullable=False)
+	content=db.Column(db.Text,nullable=False)
+	#添加作者外键
+	author_id=db.Column(db.Integer,db.ForeignKey("user.id"))
+	author=db.relationship("User",backref=db.backref("articles"))
 with app.app_context():
 	db.create_all()
 
@@ -47,6 +54,40 @@ with app.app_context():
 def hello_world():
 	return render_template('index.html')
 
+@app.route('/user/add')
+def add_user():
+	user=User(username="zhangsan",age=18)
+	db.session.add(user)
+	db.session.commit()
+	return "用户添加成功!"
+
+@app.route('/user/query')
+def query_usesr():
+	##1.get查找,根据主键查找,查一条
+	user=User.query.get(1)
+	print(f"ID:{user.id},姓名:{user.username},年龄:{user.age}")
+	##2.filter_by查找
+	users=User.query.filter_by(username="zhangsan") #user类似于数组
+	##3.all()查找
+	users=User.query.all()   
+	for user in users:
+		print(f"ID:{user.id},姓名:{user.username},年龄:{user.age}")
+	return "查询成功!"
+
+@app.route('/user/update')
+def update_user():
+	# user=User.query.get(1)
+	user=User.query.filter_by(username="zhangsan").first()
+	user.age=20
+	db.session.commit()
+	return "修改成功!"
+
+@app.route('/user/delete')
+def delete_user():
+	user=User.query.get(1)
+	db.session.delete(user)
+	db.session.commit()
+	return "删除成功!"
 
 if __name__ == '__main__':
 	app.run(debug=True)
